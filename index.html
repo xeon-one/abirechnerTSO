@@ -41,6 +41,16 @@ select:focus,input:focus{outline:2px solid var(--title);outline-offset:0}
 .verdict{margin-top:14px;padding:10px 14px;border-radius:5px;font-weight:800}
 .verdict.ok{background:#e4f5ea;color:var(--ok)} .verdict.err{background:#fdeef0;color:var(--err)} .verdict.open{background:#eef3f7;color:#5b6b78}
 
+/* Fremdsprachen */
+.fs{display:grid;gap:8px;max-width:640px}
+.fs .fsrow{display:grid;grid-template-columns:1fr auto auto;gap:8px 18px;align-items:center;padding:7px 10px;border-radius:4px;background:#f5f9fc}
+.fs .fsname{font-weight:800}
+.fs label{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;-webkit-user-select:none;user-select:none;white-space:nowrap}
+.fs input[type=checkbox]{width:20px;height:20px;margin:0;-webkit-appearance:checkbox;appearance:auto;flex:0 0 auto}
+.fs .fstag{font-size:11px;font-weight:800;border-radius:3px;padding:1px 6px;color:#fff;grid-column:1/-1;justify-self:start}
+.fstag.fort{background:var(--ok)} .fstag.neu{background:var(--warn)} .fstag.aus{background:#8aa0b2}
+@media (max-width:620px){ .fs .fsrow{grid-template-columns:1fr} }
+
 /* Wertungsschema */
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
 .schema{min-width:820px;display:grid;grid-template-columns:190px repeat(4,1fr) 150px;gap:0;background:var(--line)}
@@ -204,24 +214,31 @@ tr.sum td{font-weight:800;border-top:2px solid #9cbad1}
   <p class="sub mini">Alle Bedingungen werden schon während der Eingabe im Statusbereich angezeigt. Die Eingaben bleiben auf diesem Gerät. Das Ergebnis ist eine unverbindliche Orientierung; verbindlich sind die Entscheidungen von Schule und Prüfungsausschuss.</p>
   <div class="toolbar"><button class="btn-sec" id="reset">Alle Eingaben löschen</button></div>
 
-  <h2>1 · Prüfungsfächer wählen</h2>
+  <h2>1 · Fremdsprachen</h2>
+  <p class="sub mini">Kreuze für jede Fremdsprache an, ob du sie seit der Unterstufe (Sekundarstufe I) hattest und ob du sie in der Oberstufe belegst. Daraus ergibt sich, welche Sprache als <b>fortgeführt</b> gilt – das entscheidet über Leistungskurs, Prüfungsfach und Einbringung.</p>
+  <div class="card">
+    <div class="fs" id="fs"></div>
+    <p class="sub mini" style="margin:12px 0 0">Fortgeführt = seit der Unterstufe und in der Oberstufe belegt. Neu begonnen = erst in der Einführungsphase angefangen; eine solche Sprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4) und nicht die 4 Pflichtkurse der fortgeführten Fremdsprache abdecken (§ 26 Abs. 4).</p>
+  </div>
+
+  <h2>2 · Prüfungsfächer wählen</h2>
   <div class="card">
     <div class="pw" id="pw"></div>
     <div id="pwVerdict"></div>
   </div>
 
-  <h2>2 · Wertungsschema für die Gesamtqualifikation</h2>
+  <h2>3 · Wertungsschema für die Gesamtqualifikation</h2>
   <p class="sub mini">Trage in jedes Kästchen deine Halbjahrespunkte (0–15) ein. In der Abiturspalte stehen deine Prüfungspunkte in einfacher Wertung; daraus wird die vierfache Wertung berechnet. Unter „Weitere Kurse“ wählst du Fach und Halbjahr der übrigen Grundkurse, die du einbringst.</p>
   <div class="scroll"><div class="schema" id="schema"></div></div>
   <p class="legend">Farben in den Kästchen: <b style="color:var(--warn)">unter 5 Punkten</b> · <b style="color:var(--err)">0 Punkte (darf nicht eingebracht werden)</b></p>
 
-  <h2>3 · Ergebnis</h2>
+  <h2>4 · Ergebnis</h2>
   <div class="res-grid">
     <div class="card" id="breakdown"></div>
     <div class="card total" id="total"></div>
   </div>
 
-  <p class="foot">Grundlage: Oberstufen- und Abiturverordnung (OAVO) Hessen, §§ 13, 14, 16, 17, 24, 26, 36, 37, Anlagen 7, 10a und 10b; Darstellung nach dem Wertungsschema der Broschüre „Abitur in Hessen“ (6. Auflage). Nicht berücksichtigt: Fremdsprachenbiografie aus der Mittelstufe, Belegung der Einführungsphase, Sonderfälle (Wiederholung, Rücktritt, Nachteilsausgleich).</p>
+  <p class="foot">Grundlage: Oberstufen- und Abiturverordnung (OAVO) Hessen, §§ 13, 14, 16, 17, 24, 26, 36, 37, Anlagen 7, 10a und 10b; Darstellung nach dem Wertungsschema der Broschüre „Abitur in Hessen“ (6. Auflage). Die Fremdsprachen werden nach deinen Angaben in Abschnitt 1 geprüft. Nicht berücksichtigt: Belegung der Einführungsphase, Sonderfälle (Wiederholung, Rücktritt, Nachteilsausgleich).</p>
 </main>
 <aside class="panel" id="panel" aria-label="Status aller Bedingungen">
   <div class="ph" id="panelHead"></div>
@@ -244,6 +261,7 @@ const FAECHER = {
   "Sport":{f:0,t:"sp"}
 };
 const ALLE = Object.keys(FAECHER);
+const FS_FAECHER = ALLE.filter(f=>FAECHER[f].t==="fs");   // Englisch, Französisch, Spanisch, Polnisch
 const LK_FAECHER = ["Deutsch","Englisch","Mathematik","Biologie","Chemie","Physik","Politik und Wirtschaft","Geschichte","Kunst"];
 const FELD = {1:"sprachlich-literarisch-künstlerisch",2:"gesellschaftswissenschaftlich",3:"mathematisch-naturwissenschaftlich-technisch"};
 const PF_LABEL = ["1. Prüfungsfach","2. Prüfungsfach","3. Prüfungsfach","4. Prüfungsfach","5. Prüfungsfach"];
@@ -256,8 +274,10 @@ const NOTEN = [[823,"1,0"],[805,"1,1"],[787,"1,2"],[769,"1,3"],[751,"1,4"],[733,
 const KEY = "tso-abirechner-v1";
 
 /* ---------- Zustand ---------- */
+function leerFS(){ const o = {}; FS_FAECHER.forEach(f=>{ o[f] = {u:false,o:false}; }); return o; }
 function leer(){
   return {
+    fs:leerFS(),
     pf:["","","","",""], art5:"muendlich",
     q:[["","","",""],["","","",""],["","","",""],["","","",""],["","","",""]],
     w:Array.from({length:16},()=>({f:"",h:"",p:""})),
@@ -266,6 +286,8 @@ function leer(){
 }
 let S = leer();
 try{ const raw = localStorage.getItem(KEY); if(raw){ const o = JSON.parse(raw); if(o && o.pf && o.q && o.w && o.abi) S = Object.assign(leer(), o); } }catch(e){}
+// Fremdsprachen-Angaben vervollständigen (auch bei älteren gespeicherten Ständen)
+(function(){ const alt = S.fs || {}; S.fs = leerFS(); FS_FAECHER.forEach(f=>{ if(alt[f]){ S.fs[f].u = !!alt[f].u; S.fs[f].o = !!alt[f].o; } }); })();
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
 /* ---------- Hilfen ---------- */
@@ -277,6 +299,13 @@ const nWeitere = () => isBll() ? 16 : 12;
 const typ = f => FAECHER[f] ? FAECHER[f].t : "";
 const feld = f => FAECHER[f] ? FAECHER[f].f : -1;
 const fmt = n => (Math.round(n*100)/100).toString().replace(".",",");
+/* Fremdsprachenbiografie */
+const fsSt    = f => (S.fs && S.fs[f]) || {u:false,o:false};
+const istFS   = f => typ(f)==="fs";
+const fsBeleg = f => !istFS(f) || fsSt(f).o;                  // in der Oberstufe belegt (Nicht-Sprachen: immer true)
+const fsFort  = f => istFS(f) && fsSt(f).u && fsSt(f).o;      // fortgeführte Fremdsprache
+const fsNeu   = f => istFS(f) && !fsSt(f).u && fsSt(f).o;     // in der E-Phase neu begonnen
+const fsListe = p => FS_FAECHER.filter(p);
 function opts(list, sel, ph){ return `<option value="">${ph}</option>` + list.map(f=>`<option${f===sel?" selected":""}>${esc(f)}</option>`).join(""); }
 function cls(v){ const p = pt(v); if(Number.isNaN(p)) return "bad"; if(p===0) return "zero"; if(p!==null && p<5) return "low"; return ""; }
 
@@ -292,6 +321,42 @@ function abiErgebnis(i){
     return {v4, einfach:(2*s+m)/3, txt:`schriftl. ${s} / mündl. ${m}`};
   }
   return {v4:4*s, einfach:s, txt:(i<3?"schriftlich":(i===4?ART5[S.art5]:"mündlich"))};
+}
+
+/* ---------- Render: Fremdsprachen ---------- */
+function renderFS(){
+  $("fs").innerHTML = FS_FAECHER.map(f=>{
+    const s = fsSt(f);
+    const tag = fsFort(f) ? `<span class="fstag fort">fortgeführt</span>`
+      : (fsNeu(f) ? `<span class="fstag neu">neu begonnen</span>`
+      : (s.u && !s.o ? `<span class="fstag aus">in der Oberstufe nicht belegt</span>` : ""));
+    return `<div class="fsrow">
+      <div class="fsname">${esc(f)}</div>
+      <label><input type="checkbox" data-fsu="${esc(f)}"${s.u?" checked":""}> seit der Unterstufe</label>
+      <label><input type="checkbox" data-fso="${esc(f)}"${s.o?" checked":""}> in der Oberstufe</label>
+      ${tag}
+    </div>`;
+  }).join("");
+}
+
+/* ---------- Live-Prüfung: Fremdsprachen ---------- */
+function analyseFS(){
+  const items = [];
+  const add = (st, t, d) => items.push({st, t, d});
+  const belegt = fsListe(f=>fsSt(f).o);
+  const fort = fsListe(fsFort);
+  const neu = fsListe(fsNeu);
+
+  add(belegt.length?"ok":"open", "Es muss mind. eine Fremdsprache in der Oberstufe belegt sein.",
+      belegt.length ? belegt.join(", ") : "noch keine Angabe");
+  add(fort.length ? "ok" : (belegt.length ? "err" : "open"),
+      "Es muss mind. eine fortgeführte Fremdsprache belegt sein, denn daraus müssen 4 Kurse eingebracht werden (§ 26 Abs. 4).",
+      fort.length ? `fortgeführt: ${fort.join(", ")}`
+        : (belegt.length ? "Keine deiner Oberstufensprachen kommt aus der Unterstufe – damit sind die 4 Pflichtkurse nicht erfüllbar." : "noch keine Angabe"));
+  if(neu.length)
+    add("warn", "Eine in der Einführungsphase neu begonnene Fremdsprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4).",
+        `neu begonnen: ${neu.join(", ")}`);
+  return items;
 }
 
 /* ---------- Render: Prüfungswahl ---------- */
@@ -397,10 +462,22 @@ function analysePW(){
   add(dup.length?"err":"ok", "Jedes Fach darf nur einmal Prüfungsfach sein.", dup.length ? `doppelt: ${dup.join(", ")}` : "");
 
   const lks = [pf[0],pf[1]].filter(Boolean);
-  const lkOk = lks.some(f=>["fs","m","nw"].includes(typ(f)));
+  const lkTaugt = f => istFS(f) ? fsFort(f) : ["m","nw"].includes(typ(f));
+  const lkOk = lks.some(lkTaugt);
+  const lkFsProblem = lks.filter(f=>istFS(f) && !fsFort(f));
   add(lkOk?"ok":(lks.length===2?"err":"open"),
       "Ein Leistungsfach muss eine fortgeführte Fremdsprache, Mathematik oder eine Naturwissenschaft sein (§ 13 Abs. 2).",
-      lkOk ? `erfüllt durch ${lks.find(f=>["fs","m","nw"].includes(typ(f)))}` : (lks.length===1 ? "Dann muss das andere Leistungsfach Englisch, Mathematik, Biologie, Chemie oder Physik sein." : ""));
+      lkOk ? `erfüllt durch ${lks.find(lkTaugt)}`
+        : (lkFsProblem.length ? `${lkFsProblem.join(", ")} ${plural(lkFsProblem.length,"gilt","gelten")} nach deinen Angaben nicht als fortgeführte Fremdsprache.`
+        : (lks.length===1 ? "Dann muss das andere Leistungsfach Englisch, Mathematik, Biologie, Chemie oder Physik sein." : "")));
+
+  const fsNichtBelegt = [...new Set(pf.filter(f=>f && istFS(f) && !fsSt(f).o))];
+  add(fsNichtBelegt.length?"err":"ok", "Ein Prüfungsfach muss in der Oberstufe belegt sein (§ 24 Abs. 5).",
+      fsNichtBelegt.length ? `${fsNichtBelegt.join(", ")} ${plural(fsNichtBelegt.length,"ist","sind")} in Abschnitt 1 nicht als Oberstufensprache angegeben.` : "");
+
+  const fsNeuFalsch = [...new Set([0,1,2].filter(i=>pf[i] && fsNeu(pf[i])).map(i=>`${pf[i]} (${i+1}. PF)`))];
+  add(fsNeuFalsch.length?"err":"ok", "Eine neu begonnene Fremdsprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4).",
+      fsNeuFalsch.length ? `betrifft: ${fsNeuFalsch.join(", ")}` : "");
 
   const pf3bad = ["Sport","Darstellendes Spiel"].includes(pf[2]);
   add(pf3bad?"err":"ok", "Sport und Darstellendes Spiel können nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4).", pf3bad ? `${pf[2]} ist als 3. Prüfungsfach gewählt.` : "");
@@ -427,10 +504,11 @@ function analysePW(){
       "Deutsch und Mathematik müssen Prüfungsfächer sein (§ 24 Abs. 6).",
       !fehltDM.length ? "" : `Es fehlt noch: ${fehltDM.join(" und ")}${fehltDM.length>freiZ?` – aber nur noch ${freiZ} ${plural(freiZ,"Fach","Fächer")} frei`:""}${bll?" (die besondere Lernleistung zählt hier nicht)":""}.`);
 
-  const hatX = zaehlt.some(f=>["fs","nw","inf"].includes(typ(f)));
+  const xTaugt = f => istFS(f) ? fsSt(f).o : ["nw","inf"].includes(typ(f));
+  const hatX = zaehlt.some(xTaugt);
   add(hatX?"ok":(fehltDM.length+1>freiZ?"err":"open"),
       "Unter den Prüfungsfächern muss eine Fremdsprache, eine Naturwissenschaft oder Informatik sein (§ 24 Abs. 6).",
-      hatX ? `erfüllt durch ${zaehlt.find(f=>["fs","nw","inf"].includes(typ(f)))}` : (fehltDM.length+1>freiZ ? "Dafür ist kein Prüfungsfach mehr frei." : ""));
+      hatX ? `erfüllt durch ${zaehlt.find(xTaugt)}` : (fehltDM.length+1>freiZ ? "Dafür ist kein Prüfungsfach mehr frei." : ""));
 
   // Hinweise
   if(bll && pf[4] && fa.size===3 && pf.filter(f=>feld(f)===feld(pf[4])).length===1)
@@ -440,7 +518,7 @@ function analysePW(){
     if(typ(f)==="rel") hints.push(`${f} als Prüfungsfach: Alle Kurse der E- und Q-Phase müssen in derselben Konfession belegt sein (§ 16 Abs. 1).`);
     if(f==="Sport" && i>=3) hints.push("Sport als Prüfungsfach: alle Q-Kurse dreistündig, alle Theorie- und Praxisanteile absolviert, keine Verletzung; ein Ersatzprüfungsfach muss möglich sein (§ 17 Abs. 2). Mündlicher und fachpraktischer Teil.");
     if(f==="Darstellendes Spiel" && i>=3) hints.push("Darstellendes Spiel als Prüfungsfach: mündliche und fachpraktische Prüfung; bei Präsentation oder BLL entfällt der fachpraktische Teil (§ 24 Abs. 4, § 37).");
-    if(["Spanisch","Polnisch","Französisch"].includes(f) && i<3) hints.push(`${f} als schriftliches Prüfungsfach geht nur, wenn die Sprache aus der Mittelstufe fortgeführt wird; eine in der E-Phase neu begonnene Fremdsprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4).`);
+    if(istFS(f) && !fsSt(f).u && !fsSt(f).o) hints.push(`${f} ist in Abschnitt 1 noch nicht angegeben. Erst dann kann geprüft werden, ob die Sprache fortgeführt ist.`);
   });
   if(pf[0]||pf[1]) hints.push("Leistungsfach nur mit mindestens 5 Punkten am Ende der Einführungsphase (§ 13 Abs. 2). Jedes Prüfungsfach muss in der ganzen E-Phase und in Q1–Q4 belegt sein (§ 24 Abs. 5).");
   return {items, hints};
@@ -476,8 +554,10 @@ function analyseEin(lk, gk){
   const best = list => list.reduce((b,f)=>c(f)>c(b)?f:b, list[0]);
 
   req("Es müssen 4 Kurse in Deutsch eingebracht werden.", c("Deutsch"), 4);
-  const fsA = best(ofType("fs"));
-  req("Es müssen 4 Kurse in einer fortgeführten Fremdsprache eingebracht werden.", c(fsA), 4, `erfüllt durch ${fsA}`);
+  const fortListe = ofType("fs").filter(fsFort);
+  const fsA = fortListe.length ? best(fortListe) : null;
+  if(fsA) req("Es müssen 4 Kurse in einer fortgeführten Fremdsprache eingebracht werden.", c(fsA), 4, `erfüllt durch ${fsA}`);
+  else add("err", "Es müssen 4 Kurse in einer fortgeführten Fremdsprache eingebracht werden.", "In Abschnitt 1 ist keine fortgeführte Fremdsprache angegeben.");
   const kmd = ofType("kmd").reduce((s,f)=>s+c(f),0);
   req("Es müssen mind. 2 Kurse in Kunst, Musik oder Darstellendem Spiel eingebracht werden.", kmd, 2, `${kmd} eingetragen`);
   const gw = ALLE.filter(f=>feld(f)===2).reduce((s,f)=>s+c(f),0);
@@ -488,7 +568,7 @@ function analyseEin(lk, gk){
   const nwA = best(ofType("nw"));
   req("Es müssen 4 Kurse in einer Naturwissenschaft eingebracht werden.", c(nwA), 4, `erfüllt durch ${nwA}`);
 
-  const fsB = ofType("fs").filter(f=>!(c(fsA)>=4 && f===fsA));
+  const fsB = ofType("fs").filter(fsBeleg).filter(f=>!(fsA && c(fsA)>=4 && f===fsA));
   const fsB_best = fsB.length ? best(fsB) : null;
   const nwB = ofType("nw").filter(f=>!(c(nwA)>=4 && f===nwA)).concat(["Informatik"]);
   const nwB_best = best(nwB);
@@ -499,6 +579,10 @@ function analyseEin(lk, gk){
   else
     req("Es müssen mind. 2 Kurse in einer weiteren Fremdsprache oder in einer weiteren Naturwissenschaft bzw. Informatik eingebracht werden.",
         Math.max(fsB_best?c(fsB_best):0, c(nwB_best)), 2);
+
+  const fsUnbelegt = [...new Set([...lk,...gk].filter(k=>k.f && istFS(k.f) && !fsSt(k.f).o).map(k=>k.f))];
+  add(fsUnbelegt.length?"err":"ok", "Es dürfen nur Kurse in Fremdsprachen eingebracht werden, die in der Oberstufe belegt sind.",
+      fsUnbelegt.length ? `betrifft: ${fsUnbelegt.join(", ")} – in Abschnitt 1 nicht als Oberstufensprache angegeben` : "");
 
   const sportPF = [0,1,2,3,4].filter(i=>!(isBll() && i===4)).some(i=>S.pf[i]==="Sport");
   if(sportPF)
@@ -517,7 +601,7 @@ function analyseEin(lk, gk){
 
   // Gesamtbedarf: passen alle fehlenden Pflichtkurse noch in die freien Felder?
   const m = (have, need) => Math.max(0, need-have);
-  const need = m(c("Deutsch"),4) + m(c(fsA),4) + m(kmd,2) + Math.max(m(gw,6), m(c("Geschichte"),2)+m(c("Politik und Wirtschaft"),2))
+  const need = m(c("Deutsch"),4) + (fsA ? m(c(fsA),4) : 4) + m(kmd,2) + Math.max(m(gw,6), m(c("Geschichte"),2)+m(c("Politik und Wirtschaft"),2))
              + m(c("Mathematik"),4) + m(c(nwA),4)
              + ((fsB_best && c(fsB_best)>=2) || c(nwB_best)>=2 ? 0 : m(Math.max(fsB_best?c(fsB_best):0, c(nwB_best)),2));
   if(need>0 && need>kap) add("err", "Alle noch fehlenden Pflichtkurse müssen in die freien Felder passen.", `mindestens ${need} Pflichtkurse fehlen, aber nur ${kap} Felder sind frei`);
@@ -586,7 +670,7 @@ function gruppenStatus(z){ return z.err ? "err" : (z.open ? "open" : "ok"); }
 function update(){
   const {lk, gk} = kurse();
   weitereFeedback(lk, gk);
-  const PW = analysePW(), EIN = analyseEin(lk, gk), B = analyseBest(lk, gk);
+  const FS = analyseFS(), PW = analysePW(), EIN = analyseEin(lk, gk), B = analyseBest(lk, gk);
 
   // Ergebnis in den Abiturkästchen
   document.querySelectorAll("[data-res]").forEach(el=>{ const a = B.abi[Number(el.dataset.res)]; el.textContent = a ? `= ${a.v4} P.` : ""; });
@@ -600,6 +684,7 @@ function update(){
 
   // Note / Hochrechnung
   const gruppen = [
+    {id:"fs",  name:"Fremdsprachen", sub:"§§ 13, 24, 26", items:FS},
     {id:"pw",  name:"Prüfungswahl", sub:"§§ 13, 24", items:PW.items},
     {id:"ein", name:"Einbringung", sub:"§ 26 Abs. 2, 4, 6", items:EIN},
     {id:"best",name:"Bestehen", sub:"§ 26 Abs. 2, 13, 14", items:B.items}
@@ -679,6 +764,7 @@ function weitereFeedback(lk, gk){
     if(w.f){
       if(lkF.includes(w.f)){ err = `${w.f} ist dein Leistungsfach und kann nicht zusätzlich als Grundkurs eingebracht werden.`; bad.f = true; }
       else if(pfGk.includes(w.f)){ err = `${w.f} ist schon Prüfungsfach – alle vier Kurse stehen oben in der Zeile des Prüfungsfachs.`; bad.f = true; }
+      else if(istFS(w.f) && !fsSt(w.f).o){ err = `${w.f} ist in Abschnitt 1 nicht als Fremdsprache der Oberstufe angegeben.`; bad.f = true; }
       else if(w.f==="Sport" && ++sport>3){ err = "Höchstens 3 Sportkurse dürfen eingebracht werden (§ 17 Abs. 1)."; bad.f = true; }
       else if(w.h){
         const andere = gk.filter(k=>k.src==="weiterer Kurs" && k.wi!==j && k.f===w.f && String(k.h)===String(w.h));
@@ -710,9 +796,11 @@ function weitereFeedback(lk, gk){
 
 
 /* ---------- Ereignisse ---------- */
-function renderAll(){ renderPW(); renderSchema(); update(); }
+function renderAll(){ renderFS(); renderPW(); renderSchema(); update(); }
 document.addEventListener("change", e=>{
   const t = e.target, d = t.dataset;
+  if(d.fsu!==undefined){ S.fs[d.fsu].u = t.checked; save(); renderFS(); update(); return; }
+  if(d.fso!==undefined){ S.fs[d.fso].o = t.checked; save(); renderFS(); update(); return; }
   if(d.pf!==undefined){ S.pf[Number(d.pf)] = t.value; save(); renderSchema(); update(); return; }
   if(d.art5!==undefined){ S.art5 = t.value; save(); renderSchema(); update(); return; }
   if(d.mon!==undefined){ S.abi[Number(d.mon)].mOn = t.checked; save(); renderSchema(); update(); return; }
