@@ -500,7 +500,11 @@ function analyseEin(lk, gk){
     req("Es müssen mind. 2 Kurse in einer weiteren Fremdsprache oder in einer weiteren Naturwissenschaft bzw. Informatik eingebracht werden.",
         Math.max(fsB_best?c(fsB_best):0, c(nwB_best)), 2);
 
-  add(c("Sport")>3?"err":"ok", "Es dürfen höchstens 3 Kurse in Sport eingebracht werden (§ 17 Abs. 1).", `${c("Sport")} eingetragen`);
+  const sportPF = [0,1,2,3,4].filter(i=>!(isBll() && i===4)).some(i=>S.pf[i]==="Sport");
+  if(sportPF)
+    req("Es müssen alle 4 Kurse in Sport eingebracht werden, weil Sport Prüfungsfach ist (Ausnahme von § 17 Abs. 1).", c("Sport"), 4, "4 eingetragen");
+  else
+    add(c("Sport")>3?"err":"ok", "Es dürfen höchstens 3 Kurse in Sport eingebracht werden (§ 17 Abs. 1).", `${c("Sport")} eingetragen`);
 
   const dups = new Set(); const s2 = {};
   [...lk,...gk].forEach(k=>{ if(!k.f||!k.h) return; const key=k.f+"|"+k.h; if(s2[key]) dups.add(`${k.f} Q${k.h}`); s2[key]=1; });
