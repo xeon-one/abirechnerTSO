@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abiturrechner TSO – Prüfungswahl &amp; Gesamtqualifikation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#cfe6f7; --head:#d9d9d9; --gk:#83c2ec; --gk-dark:#5aa9dd; --lk:#8592cf; --lk-dark:#6f7cc0;
+  --abi:#e06c9c; --abi-dark:#c94f84; --ink:#1d2b3a; --title:#2b9bdc; --ok:#1f8a4c; --err:#c62f3c; --warn:#b7791f;
+  --line:#ffffff;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Avenir Next","Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.4}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
+h1{color:var(--title);font-size:26px;margin:0 0 4px;font-weight:800}
+h2{color:var(--title);font-size:20px;margin:34px 0 12px;font-weight:800}
+.sub{margin:0 0 6px;color:#3d5468}
+.card{background:#fff;border-radius:6px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+button{font:inherit;border:0;border-radius:5px;padding:8px 14px;cursor:pointer;font-weight:700}
+.btn-sec{background:#fff;color:var(--ink);border:1px solid #9cbad1}
+.btn-sec:hover{background:#eef6fc}
+
+/* Prüfungswahl */
+.pw{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.pw label{display:block;font-weight:700;font-size:13px;margin-bottom:4px}
+.pw .tag{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:3px;padding:1px 6px;margin-left:4px}
+.tag.lk{background:var(--lk)} .tag.gk{background:var(--gk-dark)}
+select,input[type=text]{font:inherit;width:100%;padding:6px 8px;border:1px solid #a9c2d6;border-radius:4px;background:#fff;color:var(--ink)}
+select:focus,input:focus{outline:2px solid var(--title);outline-offset:0}
+.checks{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:6px}
+.checks li{display:flex;gap:8px;align-items:flex-start;padding:6px 10px;border-radius:4px;background:#f5f9fc}
+.checks .ic{flex:0 0 20px;font-weight:800;text-align:center}
+.checks li.ok .ic{color:var(--ok)} .checks li.err{background:#fdeef0} .checks li.err .ic{color:var(--err)}
+.checks li.warn{background:#fff7e8} .checks li.warn .ic{color:var(--warn)}
+.checks li.open{color:#5b6b78} .checks li.open .ic{color:#8aa0b2}
+.verdict{margin-top:14px;padding:10px 14px;border-radius:5px;font-weight:800}
+.verdict.ok{background:#e4f5ea;color:var(--ok)} .verdict.err{background:#fdeef0;color:var(--err)} .verdict.open{background:#eef3f7;color:#5b6b78}
+
+/* Wertungsschema */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.schema{min-width:820px;display:grid;grid-template-columns:190px repeat(4,1fr) 150px;gap:0;background:var(--line)}
+.schema .row>div{border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
+.hd{background:var(--head);text-align:center;font-weight:700;font-size:14px;padding:7px 4px}
+.hd.block{font-size:15px}
+.band{color:#fff;font-weight:700;font-size:20px;padding:6px 10px}
+.band.gk{background:var(--gk)} .band.lk{background:var(--lk)}
+.abi{background:var(--abi);color:#fff}
+.abi-hd{padding:6px 8px;font-weight:800;font-size:17px;line-height:1.1}
+.abi-hd small{display:block;font-size:13px;font-weight:700}
+.lab{padding:12px 12px;color:#fff;font-weight:700;font-size:13px;display:flex;flex-direction:column;justify-content:center}
+.lab .fach{font-size:15px;font-weight:800;margin-top:2px}
+.lab .fach.leer{opacity:.75;font-style:italic;font-weight:600}
+.gkc{background:var(--gk)} .lkc{background:var(--lk)}
+.cell{display:flex;align-items:center;justify-content:center;padding:10px 6px}
+.box{background:#fff;border:1px solid #6b7f95;box-shadow:1px 1px 0 rgba(0,0,0,.15);width:74px;padding:3px 6px 6px;color:var(--ink)}
+.box .w{font-size:13px;font-weight:700;color:#3b4b5c}
+.box input[type=text]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;color:var(--ink);border:0;border-bottom:1.5px solid #6b7f95;border-radius:0;padding:2px 0;text-align:center;font-weight:800;font-size:17px;-moz-appearance:textfield}
+.box input::-webkit-outer-spin-button,.box input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.box input.bad{background:#fde2e5}
+.box input.zero{color:var(--err)} .box input.low{color:var(--warn)}
+.box.wide{width:auto;min-width:118px}
+.box .res{font-size:12px;margin-top:4px;color:#3b4b5c;text-align:center}
+.box .mz{display:flex;align-items:center;gap:4px;font-size:11px;margin-top:5px;color:#3b4b5c;cursor:pointer;user-select:none}
+.box .mz input{width:18px;height:18px;margin:0;-webkit-appearance:checkbox;appearance:auto;flex:0 0 auto}
+.box .mrow{margin-top:3px} .box .mrow span{font-size:11px;color:#3b4b5c}
+.box.dis{opacity:.45}
+.weitere{grid-column:1/6;background:var(--gk);padding:4px 10px 12px}
+.weitere .t{color:#fff;font-weight:700;font-size:13px;margin:4px 2px 8px}
+.wgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px 10px}
+.wbox{background:#fff;border:1px solid #6b7f95;box-shadow:1px 1px 0 rgba(0,0,0,.15);padding:3px 6px 6px}
+.wbox .w{font-size:13px;font-weight:700;color:#3b4b5c}
+.wbox select{padding:3px 4px;font-size:12px;margin-top:3px;border-radius:3px}
+.wbox .pt{display:flex;gap:4px;margin-top:4px}
+.wbox .pt select{flex:0 0 52px}
+.wbox .pt input{-webkit-appearance:none;appearance:none;width:100%;background:transparent;color:var(--ink);border:0;border-bottom:1.5px solid #6b7f95;border-radius:0;padding:2px 0;text-align:center;font-weight:800;font-size:16px;-moz-appearance:textfield}
+.wbox .pt input::-webkit-outer-spin-button,.wbox .pt input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.wbox input.bad{background:#fde2e5} .wbox input.zero{color:var(--err)} .wbox input.low{color:var(--warn)}
+.abi-empty{background:var(--abi)}
+.wbox{transition:box-shadow .15s,border-color .15s}
+.wbox.err{border-color:var(--err);box-shadow:0 0 0 2px var(--err)}
+.wbox.warn{border-color:#d9962b;box-shadow:0 0 0 2px #e8b45a}
+.wbox.ok{box-shadow:0 0 0 2px #4fb37a}
+.wbox .msg{font-size:12px;line-height:1.3;margin-top:6px;padding:4px 6px;border-radius:3px;animation:wfade .2s ease-out}
+.wbox .msg[hidden]{display:none}
+.wbox .msg.err{background:#fdeef0;color:var(--err);font-weight:700}
+.wbox .msg.warn{background:#fff3dc;color:#8a5a12;font-weight:600}
+.wbox select.err,.wbox input.err{background:#fde2e5}
+@keyframes wfade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.row{display:contents}
+.span5{grid-column:1/6}.span4q{grid-column:2/6}
+.ql{display:none}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.legend{font-size:13px;color:#3d5468;margin-top:8px}
+
+/* Ergebnis */
+.res-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #e1eaf1}
+th:first-child,td:first-child{text-align:left}
+thead th{background:#eef5fb;font-size:13px}
+tr.sum td{font-weight:800;border-top:2px solid #9cbad1}
+.pill{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:3px;padding:1px 6px}
+.pill.lk{background:var(--lk)} .pill.gk{background:var(--gk-dark)} .pill.abi{background:var(--abi)}
+.total{text-align:center;padding:18px}
+.total .big{font-size:56px;font-weight:800;color:var(--title);line-height:1}
+.total .pts{font-size:20px;font-weight:800;margin-top:8px}
+.total .state{margin-top:8px;font-weight:700}
+.bar{height:10px;background:#e6eef5;border-radius:5px;overflow:hidden;margin-top:4px}
+.bar>span{display:block;height:100%;background:var(--title)}
+.mini{font-size:12px;color:#5b6b78}
+.foot{font-size:12px;color:#3d5468;margin-top:30px}
+@media (max-width:820px){
+  .pw{grid-template-columns:1fr 1fr}
+  .res-grid{grid-template-columns:1fr}
+}
+@media (max-width:820px), (pointer:coarse){
+  input,select{font-size:16px !important}   /* verhindert Auto-Zoom in iOS Safari */
+}
+@media (max-width:720px){
+  .wrap{padding:18px 12px 40px}
+  h1{font-size:22px}
+  .scroll{overflow:visible}
+  .schema{min-width:0;display:block;background:none}
+  .row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:3px solid var(--bg)}
+  .schema .row>div{border-right:0;border-bottom:0}
+  .hdrow,.abi-hd,.abi-empty{display:none !important}
+  .span5,.span4q,.lab,.cell.abi{grid-column:1/-1}
+  .lab{padding:10px 12px 4px;flex-direction:row;flex-wrap:wrap;gap:4px 8px;align-items:baseline;justify-content:flex-start}
+  .cell{padding:6px 4px 10px}
+  .cell.abi{padding:10px 12px;justify-content:flex-start}
+  .box{width:100%}
+  .box.wide{width:100%;display:grid;grid-template-columns:auto 70px 1fr;align-items:center;gap:4px 10px}
+  .box.wide .w{grid-column:1}
+  .box.wide .mz,.box.wide .mrow,.box.wide .res{grid-column:1/-1;text-align:left}
+  .box.wide .mrow{display:grid;grid-template-columns:auto 70px;justify-content:start;gap:10px;align-items:center}
+  .ql{display:inline}
+  .wgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .weitere{padding:6px 10px 12px}
+  .wbox .pt select{flex:0 0 64px}
+  table{font-size:13px} th,td{padding:5px 5px}
+}
+@media (max-width:420px){ .pw{grid-template-columns:1fr} }
+
+/* Flow-Layout mit Statusbereich */
+.layout{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:22px;padding:0 18px;align-items:start}
+.layout .wrap{max-width:none;margin:0;padding:28px 0 60px}
+.panel{position:sticky;top:14px;margin-top:28px;max-height:calc(100vh - 28px);display:flex;flex-direction:column;background:#fff;border-radius:8px;box-shadow:0 2px 12px rgba(20,60,100,.14);overflow:hidden}
+.ph{padding:12px 14px;border-bottom:1px solid #e1eaf1;background:#f7fbfe;flex:0 0 auto}
+.phtop{display:flex;gap:12px;align-items:center}
+.nt{flex:0 0 auto;text-align:center;min-width:86px}
+.nt .big{font-size:34px;font-weight:800;color:var(--title);line-height:1}
+.nt .mini{font-size:10.5px;line-height:1.2;margin-top:3px;max-width:110px}
+.pp{flex:1 1 auto;min-width:0}
+.ptsl{font-size:16px}
+.state .good,.total .good{color:var(--ok);font-weight:800}
+.state .bad,.total .bad{color:var(--err);font-weight:800}
+.ph .state{font-size:13px;margin-top:2px}
+.tgl{display:none;background:var(--title);color:#fff;padding:8px 10px;font-size:13px;white-space:nowrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{font:inherit;font-size:12px;font-weight:800;padding:4px 9px;border-radius:12px;border:0;cursor:pointer}
+.chip.ok{background:#e4f5ea;color:var(--ok)} .chip.err{background:#fdeef0;color:var(--err)} .chip.open{background:#eef3f7;color:#4d5f6e}
+.pb{overflow:auto;padding:4px 14px 14px;-webkit-overflow-scrolling:touch;flex:1 1 auto}
+.grp h3{font-size:14px;margin:14px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:baseline;color:var(--ink)}
+.grp h3 .mini{font-weight:600}
+.cnt{font-size:12px;white-space:nowrap} .c-ok{color:var(--ok)} .c-open{color:#7b8d9c} .c-err{color:var(--err)}
+.pb .checks{margin:0;gap:5px}
+.pb .checks li{font-size:13px;padding:6px 8px;line-height:1.3}
+.checks .d{display:block;font-size:12px;color:#5b6b78;margin-top:2px}
+.checks li.err .d{color:#a12a35;font-weight:700}
+.checks li.ok .t{color:#33475a}
+.checks li.open .t{color:var(--ink)}
+.hints summary{font-weight:800;font-size:14px;margin:14px 0 6px;cursor:pointer;color:var(--warn)}
+.legend2{margin:12px 0 0}
+.flash{animation:flash .9s ease-out}
+@keyframes flash{0%{background:#fff3c4}100%{background:transparent}}
+@media (max-width:1239px){
+  .layout{display:block;padding:0}
+  .layout .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 150px}
+  .panel{position:fixed;left:0;right:0;bottom:0;top:auto;margin:0;border-radius:12px 12px 0 0;max-height:78vh;z-index:50;box-shadow:0 -4px 18px rgba(20,60,100,.22);padding-bottom:env(safe-area-inset-bottom)}
+  .panel .pb{display:none}
+  .panel.open .pb{display:block}
+  .tgl{display:block}
+  .ph{padding:10px 12px}
+  .nt .big{font-size:28px}
+}
+@media (max-width:720px){
+  .layout .wrap{padding:18px 12px 160px}
+  .nt{min-width:70px} .nt .mini{max-width:84px}
+  .ptsl{font-size:14px} .ph .mini{font-size:11px}
+  .chips{margin-top:8px} .chip{font-size:11.5px;padding:4px 8px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<main class="wrap">
+  <h1>Abiturrechner – gymnasiale Oberstufe</h1>
+  <p class="sub">Toni-Sender-Oberstufe Frankfurt · Prüfungswahl prüfen und Gesamtqualifikation berechnen (nach OAVO Hessen)</p>
+  <p class="sub mini">Alle Bedingungen werden schon während der Eingabe im Statusbereich angezeigt. Die Eingaben bleiben auf diesem Gerät. Das Ergebnis ist eine unverbindliche Orientierung; verbindlich sind die Entscheidungen von Schule und Prüfungsausschuss.</p>
+  <div class="toolbar"><button class="btn-sec" id="reset">Alle Eingaben löschen</button></div>
+
+  <h2>1 · Prüfungsfächer wählen</h2>
+  <div class="card">
+    <div class="pw" id="pw"></div>
+    <div id="pwVerdict"></div>
+  </div>
+
+  <h2>2 · Wertungsschema für die Gesamtqualifikation</h2>
+  <p class="sub mini">Trage in jedes Kästchen deine Halbjahrespunkte (0–15) ein. In der Abiturspalte stehen deine Prüfungspunkte in einfacher Wertung; daraus wird die vierfache Wertung berechnet. Unter „Weitere Kurse“ wählst du Fach und Halbjahr der übrigen Grundkurse, die du einbringst.</p>
+  <div class="scroll"><div class="schema" id="schema"></div></div>
+  <p class="legend">Farben in den Kästchen: <b style="color:var(--warn)">unter 5 Punkten</b> · <b style="color:var(--err)">0 Punkte (darf nicht eingebracht werden)</b></p>
+
+  <h2>3 · Ergebnis</h2>
+  <div class="res-grid">
+    <div class="card" id="breakdown"></div>
+    <div class="card total" id="total"></div>
+  </div>
+
+  <p class="foot">Grundlage: Oberstufen- und Abiturverordnung (OAVO) Hessen, §§ 13, 14, 16, 17, 24, 26, 36, 37, Anlagen 7, 10a und 10b; Darstellung nach dem Wertungsschema der Broschüre „Abitur in Hessen“ (6. Auflage). Nicht berücksichtigt: Fremdsprachenbiografie aus der Mittelstufe, Belegung der Einführungsphase, Sonderfälle (Wiederholung, Rücktritt, Nachteilsausgleich).</p>
+</main>
+<aside class="panel" id="panel" aria-label="Status aller Bedingungen">
+  <div class="ph" id="panelHead"></div>
+  <div class="pb" id="panelBody"></div>
+</aside>
+</div>
+<script>
+(function(){
+"use strict";
+
+/* ---------- Stammdaten ---------- */
+// f: Aufgabenfeld (1 = sprachl.-lit.-künstl., 2 = gesellschaftswiss., 3 = math.-nat.-techn., 0 = Sport)
+// t: Typ für die Regeln
+const FAECHER = {
+  "Deutsch":{f:1,t:"d"}, "Englisch":{f:1,t:"fs"}, "Französisch":{f:1,t:"fs"}, "Spanisch":{f:1,t:"fs"}, "Polnisch":{f:1,t:"fs"},
+  "Kunst":{f:1,t:"kmd"}, "Musik":{f:1,t:"kmd"}, "Darstellendes Spiel":{f:1,t:"kmd"},
+  "Geschichte":{f:2,t:"ge"}, "Politik und Wirtschaft":{f:2,t:"pw"}, "Religion (evangelisch)":{f:2,t:"rel"},
+  "Religion (katholisch)":{f:2,t:"rel"}, "Ethik":{f:2,t:"gw"}, "Philosophie":{f:2,t:"gw"},
+  "Mathematik":{f:3,t:"m"}, "Biologie":{f:3,t:"nw"}, "Chemie":{f:3,t:"nw"}, "Physik":{f:3,t:"nw"}, "Informatik":{f:3,t:"inf"},
+  "Sport":{f:0,t:"sp"}
+};
+const ALLE = Object.keys(FAECHER);
+const LK_FAECHER = ["Deutsch","Englisch","Mathematik","Biologie","Chemie","Physik","Politik und Wirtschaft","Geschichte","Kunst"];
+const FELD = {1:"sprachlich-literarisch-künstlerisch",2:"gesellschaftswissenschaftlich",3:"mathematisch-naturwissenschaftlich-technisch"};
+const PF_LABEL = ["1. Prüfungsfach","2. Prüfungsfach","3. Prüfungsfach","4. Prüfungsfach","5. Prüfungsfach"];
+const PF_SUB = ["Leistungskurs, schriftlich","Leistungskurs, schriftlich","Grundkurs, schriftlich","Grundkurs, mündlich",""];
+const ART5 = {muendlich:"mündliche Prüfung", praes:"Präsentation", bll:"besondere Lernleistung"};
+// Anlage 10b: untere Grenze -> Note
+const NOTEN = [[823,"1,0"],[805,"1,1"],[787,"1,2"],[769,"1,3"],[751,"1,4"],[733,"1,5"],[715,"1,6"],[697,"1,7"],[679,"1,8"],[661,"1,9"],
+  [643,"2,0"],[625,"2,1"],[607,"2,2"],[589,"2,3"],[571,"2,4"],[553,"2,5"],[535,"2,6"],[517,"2,7"],[499,"2,8"],[481,"2,9"],
+  [463,"3,0"],[445,"3,1"],[427,"3,2"],[409,"3,3"],[391,"3,4"],[373,"3,5"],[355,"3,6"],[337,"3,7"],[319,"3,8"],[301,"3,9"],[300,"4,0"]];
+const KEY = "tso-abirechner-v1";
+
+/* ---------- Zustand ---------- */
+function leer(){
+  return {
+    pf:["","","","",""], art5:"muendlich",
+    q:[["","","",""],["","","",""],["","","",""],["","","",""],["","","",""]],
+    w:Array.from({length:16},()=>({f:"",h:"",p:""})),
+    abi:Array.from({length:5},()=>({s:"",m:"",mOn:false}))
+  };
+}
+let S = leer();
+try{ const raw = localStorage.getItem(KEY); if(raw){ const o = JSON.parse(raw); if(o && o.pf && o.q && o.w && o.abi) S = Object.assign(leer(), o); } }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- Hilfen ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function pt(v){ if(v===""||v===null||v===undefined) return null; const n = Number(v); return (Number.isInteger(n) && n>=0 && n<=15) ? n : NaN; }
+const isBll = () => S.art5 === "bll";
+const nWeitere = () => isBll() ? 16 : 12;
+const typ = f => FAECHER[f] ? FAECHER[f].t : "";
+const feld = f => FAECHER[f] ? FAECHER[f].f : -1;
+const fmt = n => (Math.round(n*100)/100).toString().replace(".",",");
+function opts(list, sel, ph){ return `<option value="">${ph}</option>` + list.map(f=>`<option${f===sel?" selected":""}>${esc(f)}</option>`).join(""); }
+function cls(v){ const p = pt(v); if(Number.isNaN(p)) return "bad"; if(p===0) return "zero"; if(p!==null && p<5) return "low"; return ""; }
+
+/* ---------- Abiturergebnis je Prüfungsfach ---------- */
+// liefert {v4, einfach, txt} oder null, wenn unvollständig; NaN-Fälle -> null
+function abiErgebnis(i){
+  const a = S.abi[i]; const s = pt(a.s);
+  if(s===null || Number.isNaN(s)) return null;
+  if(i<3 && a.mOn){
+    const m = pt(a.m);
+    if(m===null || Number.isNaN(m)) return null;
+    const v4 = Math.floor((2*s+m)*4/3);           // Anlage 10a: P = (2s + m) · 4/3
+    return {v4, einfach:(2*s+m)/3, txt:`schriftl. ${s} / mündl. ${m}`};
+  }
+  return {v4:4*s, einfach:s, txt:(i<3?"schriftlich":(i===4?ART5[S.art5]:"mündlich"))};
+}
+
+/* ---------- Render: Prüfungswahl ---------- */
+function renderPW(){
+  let h = "";
+  for(let i=0;i<5;i++){
+    const list = i<2 ? LK_FAECHER : ALLE;
+    h += `<div><label>${PF_LABEL[i]} <span class="tag ${i<2?"lk":"gk"}">${i<2?"LK":"GK"}</span></label>
+      <select data-pf="${i}">${opts(list,S.pf[i],"– Fach wählen –")}</select>`;
+    if(i===4) h += `<select data-art5 style="margin-top:6px">${Object.keys(ART5).map(k=>`<option value="${k}"${k===S.art5?" selected":""}>${ART5[k]}</option>`).join("")}</select>`;
+    else h += `<div class="mini" style="margin-top:6px">${PF_SUB[i]}</div>`;
+    h += `</div>`;
+  }
+  $("pw").innerHTML = h;
+}
+
+/* ---------- Render: Wertungsschema ---------- */
+function boxQ(r,h,w){
+  const v = S.q[r][h];
+  return `<div class="box"><div class="w"><span class="ql">Q${h+1} · </span>${w}x</div><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" data-q="${r},${h}" value="${esc(v)}" class="${cls(v)}" aria-label="${PF_LABEL[r]} Q${h+1}"></div>`;
+}
+function boxAbi(i){
+  if(i===4 && isBll()){
+    return `<div class="box wide"><div class="w"><span class="ql">Abitur · </span>4x · BLL</div><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" data-abi="${i},s" value="${esc(S.abi[i].s)}" class="${cls(S.abi[i].s)}" aria-label="Besondere Lernleistung"><div class="res" data-res="${i}"></div></div>`;
+  }
+  const a = S.abi[i];
+  let h = `<div class="box wide"><div class="w"><span class="ql">Abiturprüfung · </span>4x</div><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" data-abi="${i},s" value="${esc(a.s)}" class="${cls(a.s)}" aria-label="${PF_LABEL[i]} Prüfung">`;
+  if(i<3){
+    h += `<label class="mz"><input type="checkbox" data-mon="${i}"${a.mOn?" checked":""}> mündl. Zusatzprüfung</label>`;
+    if(a.mOn) h += `<div class="mrow"><span>mündlich:</span><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" data-abi="${i},m" value="${esc(a.m)}" class="${cls(a.m)}" aria-label="${PF_LABEL[i]} mündliche Zusatzprüfung"></div>`;
+  }
+  h += `<div class="res" data-res="${i}"></div></div>`;
+  return h;
+}
+function labelRow(i, klasse){
+  const f = S.pf[i];
+  let sub = PF_SUB[i];
+  if(i===4) sub = ART5[S.art5];
+  return `<div class="lab ${klasse}"><div>${PF_LABEL[i]}${sub?` <span style="font-weight:600">(${sub})</span>`:""}</div><div class="fach${f?"":" leer"}">${f?esc(f):"noch nicht gewählt"}</div></div>`;
+}
+function renderSchema(){
+  let h = `<div class="row hdrow"><div class="hd"></div><div class="hd">Q1</div><div class="hd">Q2</div><div class="hd">Q3</div><div class="hd">Q4</div><div class="hd">Abiturprüfung</div></div>`;
+  h += `<div class="row hdrow"><div class="hd block span5">BLOCK I</div><div class="hd block">BLOCK II</div></div>`;
+  h += `<div class="row"><div class="band gk span5">Grundkursbereich (24 Kurse)</div><div class="abi abi-hd">Abiturbereich<small>Vierfache Wertung</small></div></div>`;
+  for(const i of [2,3,4]){
+    h += `<div class="row">`;
+    if(i===4 && isBll()){
+      h += `<div class="lab gkc"><div>5. Prüfungsfach (besondere Lernleistung)</div><div class="fach${S.pf[4]?"":" leer"}">${S.pf[4]?esc(S.pf[4]):"Referenzfach wählen"}</div></div>`;
+      h += `<div class="cell gkc span4q" style="color:#fff;font-size:13px;font-weight:600">Keine Einbringungspflicht von vier Kursen des Referenzfaches – dafür vier zusätzliche Felder unter „Weitere Kurse“.</div>`;
+    } else {
+      h += labelRow(i,"gkc");
+      for(let q=0;q<4;q++) h += `<div class="cell gkc">${boxQ(i,q,1)}</div>`;
+    }
+    h += `<div class="cell abi">${boxAbi(i)}</div></div>`;
+  }
+  // weitere Kurse
+  h += `<div class="row"><div class="weitere span5"><div class="t">Weitere Kurse (GK) – Fach, Halbjahr, Punkte</div><div class="wgrid">`;
+  for(let j=0;j<nWeitere();j++){
+    const w = S.w[j];
+    h += `<div class="wbox" data-wbox="${j}"><div class="w">1x</div>
+      <select data-wf="${j}" aria-label="Weiterer Kurs ${j+1} Fach">${opts(ALLE,w.f,"Fach")}</select>
+      <div class="pt"><select data-wh="${j}" aria-label="Weiterer Kurs ${j+1} Halbjahr"><option value="">Hj</option>${[1,2,3,4].map(n=>`<option value="${n}"${String(w.h)===String(n)?" selected":""}>Q${n}</option>`).join("")}</select>
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" data-wp="${j}" value="${esc(w.p)}" class="${cls(w.p)}" aria-label="Weiterer Kurs ${j+1} Punkte"></div><div class="msg" data-wmsg="${j}" role="status" aria-live="polite" hidden></div></div>`;
+  }
+  h += `</div></div><div class="abi-empty"></div></div>`;
+  // Leistungskurse
+  h += `<div class="row"><div class="band lk span5">Leistungskursbereich (8 Kurse)</div><div class="abi-empty"></div></div>`;
+  for(const i of [0,1]){
+    h += `<div class="row">` + labelRow(i,"lkc");
+    for(let q=0;q<4;q++) h += `<div class="cell lkc">${boxQ(i,q,2)}</div>`;
+    h += `<div class="cell abi">${boxAbi(i)}</div></div>`;
+  }
+  $("schema").innerHTML = h;
+}
+
+
+/* ---------- Kurse sammeln ---------- */
+function kurse(){
+  const lk = [], gk = [];
+  for(const i of [0,1]) for(let q=0;q<4;q++) lk.push({f:S.pf[i], h:q+1, p:pt(S.q[i][q]), src:PF_LABEL[i]});
+  for(const i of [2,3,4]){ if(i===4 && isBll()) continue; for(let q=0;q<4;q++) gk.push({f:S.pf[i], h:q+1, p:pt(S.q[i][q]), src:PF_LABEL[i]}); }
+  for(let j=0;j<nWeitere();j++){ const w=S.w[j]; gk.push({f:w.f, h:w.h?Number(w.h):null, p:pt(w.p), src:"weiterer Kurs", wi:j}); }
+  return {lk, gk};
+}
+const gueltig = k => k.p!==null && !Number.isNaN(k.p);
+const plural = (n, a, b) => n===1 ? a : b;
+
+/* ---------- Live-Prüfung: Prüfungswahl ---------- */
+function analysePW(){
+  const items = [], hints = [];
+  const add = (st, t, d) => items.push({st, t, d});
+  const pf = S.pf, bll = isBll();
+  const n = pf.filter(Boolean).length, frei = 5 - n;
+
+  add(n===5?"ok":"open", "Es müssen fünf Prüfungsfächer gewählt werden.", `${n}/5 gewählt`);
+
+  const dup = [];
+  for(let i=0;i<5;i++) for(let k=i+1;k<5;k++){
+    if(!pf[i] || pf[i]!==pf[k]) continue;
+    if(bll && k===4 && i<3) continue;               // § 24 Abs. 3: BLL darf in einem schriftlichen Fach liegen
+    dup.push(`${pf[i]} (${i+1}. und ${k+1}. PF)`);
+  }
+  add(dup.length?"err":"ok", "Jedes Fach darf nur einmal Prüfungsfach sein.", dup.length ? `doppelt: ${dup.join(", ")}` : "");
+
+  const lks = [pf[0],pf[1]].filter(Boolean);
+  const lkOk = lks.some(f=>["fs","m","nw"].includes(typ(f)));
+  add(lkOk?"ok":(lks.length===2?"err":"open"),
+      "Ein Leistungsfach muss eine fortgeführte Fremdsprache, Mathematik oder eine Naturwissenschaft sein (§ 13 Abs. 2).",
+      lkOk ? `erfüllt durch ${lks.find(f=>["fs","m","nw"].includes(typ(f)))}` : (lks.length===1 ? "Dann muss das andere Leistungsfach Englisch, Mathematik, Biologie, Chemie oder Physik sein." : ""));
+
+  const pf3bad = ["Sport","Darstellendes Spiel"].includes(pf[2]);
+  add(pf3bad?"err":"ok", "Sport und Darstellendes Spiel können nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4).", pf3bad ? `${pf[2]} ist als 3. Prüfungsfach gewählt.` : "");
+
+  const w = [0,1,2].filter(i=>pf[i]);
+  const fw = new Set(w.map(i=>feld(pf[i])).filter(x=>x>0));
+  let st5, d5 = "";
+  if(fw.size>=2){ st5 = "ok"; }
+  else if(w.length===3){ st5 = "err"; d5 = `Alle drei liegen im Aufgabenfeld „${FELD[[...fw][0]]||"–"}“.`; }
+  else { st5 = "open"; if(fw.size===1 && w.length===2) d5 = `Das noch offene schriftliche Fach muss aus einem anderen Aufgabenfeld kommen als „${FELD[[...fw][0]]}“.`; }
+  add(st5, "Die drei schriftlichen Prüfungsfächer müssen mindestens zwei Aufgabenfelder abdecken (§ 24 Abs. 2).", d5);
+
+  const fa = new Set(pf.filter(Boolean).map(feld).filter(x=>x>0));
+  const fehltF = [1,2,3].filter(x=>!fa.has(x)).map(x=>FELD[x]);
+  add(!fehltF.length?"ok":(fehltF.length>frei?"err":"open"),
+      "Alle fünf Prüfungsfächer zusammen müssen alle drei Aufgabenfelder abdecken (§ 24 Abs. 1). Sport zählt zu keinem Aufgabenfeld.",
+      !fehltF.length ? "" : (fehltF.length>frei ? `Es fehlt ${fehltF.join(" und ")}, aber nur noch ${frei} ${plural(frei,"Fach","Fächer")} frei.` : `Es fehlt noch: ${fehltF.join(", ")}.`));
+
+  const idxZ = [0,1,2,3,4].filter(i=>!(bll && i===4));            // BLL kann diese Fächer nicht ersetzen
+  const zaehlt = idxZ.map(i=>pf[i]).filter(Boolean);
+  const freiZ = idxZ.filter(i=>!pf[i]).length;
+  const fehltDM = ["Deutsch","Mathematik"].filter(f=>!zaehlt.includes(f));
+  add(!fehltDM.length?"ok":(fehltDM.length>freiZ?"err":"open"),
+      "Deutsch und Mathematik müssen Prüfungsfächer sein (§ 24 Abs. 6).",
+      !fehltDM.length ? "" : `Es fehlt noch: ${fehltDM.join(" und ")}${fehltDM.length>freiZ?` – aber nur noch ${freiZ} ${plural(freiZ,"Fach","Fächer")} frei`:""}${bll?" (die besondere Lernleistung zählt hier nicht)":""}.`);
+
+  const hatX = zaehlt.some(f=>["fs","nw","inf"].includes(typ(f)));
+  add(hatX?"ok":(fehltDM.length+1>freiZ?"err":"open"),
+      "Unter den Prüfungsfächern muss eine Fremdsprache, eine Naturwissenschaft oder Informatik sein (§ 24 Abs. 6).",
+      hatX ? `erfüllt durch ${zaehlt.find(f=>["fs","nw","inf"].includes(typ(f)))}` : (fehltDM.length+1>freiZ ? "Dafür ist kein Prüfungsfach mehr frei." : ""));
+
+  // Hinweise
+  if(bll && pf[4] && fa.size===3 && pf.filter(f=>feld(f)===feld(pf[4])).length===1)
+    hints.push("Die besondere Lernleistung deckt ein Aufgabenfeld allein ab. Ob sie diesem Feld zugeordnet werden kann, entscheidet die Schulleitung (§ 24 Abs. 3).");
+  pf.forEach((f,i)=>{
+    if(!f) return;
+    if(typ(f)==="rel") hints.push(`${f} als Prüfungsfach: Alle Kurse der E- und Q-Phase müssen in derselben Konfession belegt sein (§ 16 Abs. 1).`);
+    if(f==="Sport" && i>=3) hints.push("Sport als Prüfungsfach: alle Q-Kurse dreistündig, alle Theorie- und Praxisanteile absolviert, keine Verletzung; ein Ersatzprüfungsfach muss möglich sein (§ 17 Abs. 2). Mündlicher und fachpraktischer Teil.");
+    if(f==="Darstellendes Spiel" && i>=3) hints.push("Darstellendes Spiel als Prüfungsfach: mündliche und fachpraktische Prüfung; bei Präsentation oder BLL entfällt der fachpraktische Teil (§ 24 Abs. 4, § 37).");
+    if(["Spanisch","Polnisch","Französisch"].includes(f) && i<3) hints.push(`${f} als schriftliches Prüfungsfach geht nur, wenn die Sprache aus der Mittelstufe fortgeführt wird; eine in der E-Phase neu begonnene Fremdsprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4).`);
+  });
+  if(pf[0]||pf[1]) hints.push("Leistungsfach nur mit mindestens 5 Punkten am Ende der Einführungsphase (§ 13 Abs. 2). Jedes Prüfungsfach muss in der ganzen E-Phase und in Q1–Q4 belegt sein (§ 24 Abs. 5).");
+  return {items, hints};
+}
+
+/* ---------- Live-Prüfung: Einbringung ---------- */
+function analyseEin(lk, gk){
+  const items = [];
+  const add = (st, t, d) => items.push({st, t, d});
+  const lkF = [S.pf[0],S.pf[1]].filter(Boolean);
+  const pfGk = [2,3,4].filter(i=>!(isBll() && i===4)).map(i=>S.pf[i]).filter(Boolean);
+  const weitere = gk.filter(k=>k.src==="weiterer Kurs");
+
+  // Zählung: Prüfungsfach-Zeilen + gültige weitere Kurse (je Fach/Halbjahr nur einmal)
+  const cnt = {}, seen = new Set();
+  [...lk, ...gk].forEach(k=>{
+    if(!k.f) return;
+    if(k.src==="weiterer Kurs" && (lkF.includes(k.f) || pfGk.includes(k.f))) return;
+    if(k.h){ const key = k.f+"|"+k.h; if(seen.has(key)) return; seen.add(key); }
+    cnt[k.f] = (cnt[k.f]||0) + 1;
+  });
+  const c = f => cnt[f]||0;
+  const ofType = t => ALLE.filter(f=>typ(f)===t);
+  const freieFelder = weitere.filter(k=>!k.f).length;
+  const offenePF = [0,1,2,3,4].filter(i=>!(isBll() && i===4) && !S.pf[i]).length;
+  const kap = freieFelder + 4*offenePF;                       // so viele Kurse können noch hinzukommen
+  const bisher = (have, need) => `${Math.min(have,need)}/${need}`;
+  const req = (t, have, need, okD) => {
+    const miss = need - have;
+    if(miss<=0) return add("ok", t, okD||"");
+    add(miss<=kap ? "open" : "err", t, miss<=kap ? `${bisher(have,need)} – es ${plural(miss,"fehlt","fehlen")} noch ${miss}` : `${bisher(have,need)} – es fehlen ${miss}, aber nur noch ${kap} freie Felder`);
+  };
+  const best = list => list.reduce((b,f)=>c(f)>c(b)?f:b, list[0]);
+
+  req("Es müssen 4 Kurse in Deutsch eingebracht werden.", c("Deutsch"), 4);
+  const fsA = best(ofType("fs"));
+  req("Es müssen 4 Kurse in einer fortgeführten Fremdsprache eingebracht werden.", c(fsA), 4, `erfüllt durch ${fsA}`);
+  const kmd = ofType("kmd").reduce((s,f)=>s+c(f),0);
+  req("Es müssen mind. 2 Kurse in Kunst, Musik oder Darstellendem Spiel eingebracht werden.", kmd, 2, `${kmd} eingetragen`);
+  const gw = ALLE.filter(f=>feld(f)===2).reduce((s,f)=>s+c(f),0);
+  req("Es müssen mind. 6 Kurse im gesellschaftswissenschaftlichen Aufgabenfeld eingebracht werden.", gw, 6, `${gw} eingetragen`);
+  req("Es müssen mind. 2 Kurse in Geschichte eingebracht werden.", c("Geschichte"), 2, `${c("Geschichte")} eingetragen`);
+  req("Es müssen mind. 2 Kurse in Politik und Wirtschaft eingebracht werden.", c("Politik und Wirtschaft"), 2, `${c("Politik und Wirtschaft")} eingetragen`);
+  req("Es müssen 4 Kurse in Mathematik eingebracht werden.", c("Mathematik"), 4);
+  const nwA = best(ofType("nw"));
+  req("Es müssen 4 Kurse in einer Naturwissenschaft eingebracht werden.", c(nwA), 4, `erfüllt durch ${nwA}`);
+
+  const fsB = ofType("fs").filter(f=>!(c(fsA)>=4 && f===fsA));
+  const fsB_best = fsB.length ? best(fsB) : null;
+  const nwB = ofType("nw").filter(f=>!(c(nwA)>=4 && f===nwA)).concat(["Informatik"]);
+  const nwB_best = best(nwB);
+  if(fsB_best && c(fsB_best)>=2)
+    add("ok", "Es müssen mind. 2 Kurse in einer weiteren Fremdsprache eingebracht werden.", `erfüllt durch ${fsB_best}`);
+  else if(c(nwB_best)>=2)
+    add("ok", "Es müssen mind. 2 Kurse in einer weiteren Naturwissenschaft oder in Informatik eingebracht werden.", `erfüllt durch ${nwB_best}`);
+  else
+    req("Es müssen mind. 2 Kurse in einer weiteren Fremdsprache oder in einer weiteren Naturwissenschaft bzw. Informatik eingebracht werden.",
+        Math.max(fsB_best?c(fsB_best):0, c(nwB_best)), 2);
+
+  add(c("Sport")>3?"err":"ok", "Es dürfen höchstens 3 Kurse in Sport eingebracht werden (§ 17 Abs. 1).", `${c("Sport")} eingetragen`);
+
+  const dups = new Set(); const s2 = {};
+  [...lk,...gk].forEach(k=>{ if(!k.f||!k.h) return; const key=k.f+"|"+k.h; if(s2[key]) dups.add(`${k.f} Q${k.h}`); s2[key]=1; });
+  add(dups.size?"err":"ok", "Jeder Kurs darf nur einmal eingebracht werden.", dups.size ? `doppelt: ${[...dups].join(", ")}` : "");
+  const falsch = [...new Set(weitere.filter(k=>k.f && (lkF.includes(k.f)||pfGk.includes(k.f))).map(k=>k.f))];
+  add(falsch.length?"err":"ok", "Leistungs- und Prüfungsfächer dürfen nicht zusätzlich unter „Weitere Kurse“ stehen.", falsch.length ? `betrifft: ${falsch.join(", ")}` : "");
+
+  const gkF = gk.filter(k=>k.f).length, lkFn = lk.filter(k=>k.f).length;
+  add(gkF===gk.length && lkFn===8 ? "ok" : "open", "Es müssen 24 Grundkurse (einfach) und 8 Leistungskurse (doppelt) eingebracht werden.", `${gkF}/24 Grundkurse, ${lkFn}/8 Leistungskurse mit Fach belegt`);
+
+  // Gesamtbedarf: passen alle fehlenden Pflichtkurse noch in die freien Felder?
+  const m = (have, need) => Math.max(0, need-have);
+  const need = m(c("Deutsch"),4) + m(c(fsA),4) + m(kmd,2) + Math.max(m(gw,6), m(c("Geschichte"),2)+m(c("Politik und Wirtschaft"),2))
+             + m(c("Mathematik"),4) + m(c(nwA),4)
+             + ((fsB_best && c(fsB_best)>=2) || c(nwB_best)>=2 ? 0 : m(Math.max(fsB_best?c(fsB_best):0, c(nwB_best)),2));
+  if(need>0 && need>kap) add("err", "Alle noch fehlenden Pflichtkurse müssen in die freien Felder passen.", `mindestens ${need} Pflichtkurse fehlen, aber nur ${kap} Felder sind frei`);
+  return items;
+}
+
+/* ---------- Live-Prüfung: Bestehen + Punkte ---------- */
+function analyseBest(lk, gk){
+  const items = [];
+  const add = (st, t, d) => items.push({st, t, d});
+  const val = k => gueltig(k) ? k.p : 0;
+  const lkE = lk.reduce((s,k)=>s+val(k),0), lkW = 2*lkE;
+  const gkE = gk.reduce((s,k)=>s+val(k),0);
+  const abi = [0,1,2,3,4].map(abiErgebnis);
+  const blockII = abi.reduce((s,a)=>s+(a?a.v4:0),0);
+  const blockI = lkW + gkE, total = blockI + blockII;
+  const missLK = lk.filter(k=>!gueltig(k)).length, missGK = gk.filter(k=>!gueltig(k)).length, missAbi = abi.filter(a=>!a).length;
+  const complete = !missLK && !missGK && !missAbi;
+
+  const alle = [...lk,...gk].filter(gueltig);
+  const nul = alle.filter(k=>k.p===0);
+  add(nul.length?"err":"ok", "Kein eingebrachter Kurs darf 0 Punkte haben (§ 26 Abs. 2).", nul.length ? `${nul.length} ${plural(nul.length,"Kurs","Kurse")} mit 0 Punkten` : "");
+  const u5 = alle.filter(k=>k.p<5).length, u5lk = lk.filter(k=>gueltig(k) && k.p<5).length;
+  add(u5>6||u5lk>2?"err":"ok", "Höchstens 6 Kurse dürfen unter 5 Punkten liegen, davon höchstens 2 Leistungskurse (§ 26 Abs. 2).", `bisher ${u5}/6, davon ${u5lk}/2 LK`);
+
+  const schwelle = (t, cur, min, maxAdd, offen, wort) => {
+    if(cur>=min) return add("ok", t, `${cur} Punkte`);
+    if(cur+maxAdd<min) return add("err", t, `${cur} Punkte – ${offen?`selbst mit 15 Punkten überall höchstens ${cur+maxAdd}`:"zu wenig"}`);
+    add("open", t, `bisher ${cur} – ${offen} ${wort} noch offen`);
+  };
+  schwelle("Im Leistungskursbereich müssen mind. 80 Punkte erreicht werden (§ 26 Abs. 14).", lkW, 80, 30*missLK, missLK, missLK===1?"Kurs":"Kurse");
+  schwelle("Im Grundkursbereich müssen mind. 120 Punkte erreicht werden (§ 26 Abs. 14).", gkE, 120, 15*missGK, missGK, missGK===1?"Kurs":"Kurse");
+  schwelle("Im Abiturbereich müssen mind. 100 Punkte erreicht werden (§ 26 Abs. 14).", blockII, 100, 60*missAbi, missAbi, missAbi===1?"Prüfung":"Prüfungen");
+
+  const sat = [0,1,2,3,4].filter(i=>abi[i] && abi[i].v4>=20);
+  const unk = [0,1,2,3,4].filter(i=>!abi[i]);
+  const lkSat = sat.some(i=>i<2), lkMog = lkSat || unk.some(i=>i<2);
+  let st6 = "open";
+  if(sat.length>=3 && lkSat) st6 = "ok"; else if(sat.length+unk.length<3 || !lkMog) st6 = "err";
+  add(st6, "In mind. 3 Prüfungsfächern, darunter einem Leistungsfach, müssen je mind. 5 Punkte (einfach) erreicht werden (§ 26 Abs. 13).",
+      `bisher ${sat.length} ${plural(sat.length,"Fach","Fächer")}${lkSat?", darunter ein LK":""}`);
+  const abiNull = [0,1,2,3,4].filter(i=>abi[i] && abi[i].v4===0);
+  add(abiNull.length?"err":"ok", "Keine Abiturprüfung darf mit 0 Punkten abgeschlossen werden (§ 26 Abs. 13).",
+      abiNull.length ? `0 Punkte im ${abiNull.map(i=>i+1+".").join(", ")} Prüfungsfach – bei schriftlichen Fächern folgt eine zusätzliche mündliche Prüfung` : "");
+  schwelle("Die Gesamtpunktzahl muss mind. 300 betragen (§ 26 Abs. 14).", total, 300, 30*missLK+15*missGK+60*missAbi, missLK+missGK+missAbi, "Eingaben");
+
+  // Hochrechnung bei gleichbleibendem Schnitt je Bereich
+  let proj = null;
+  const lkV = lk.filter(gueltig), gkV = gk.filter(gueltig), abV = abi.filter(Boolean);
+  if(lkV.length && gkV.length && abV.length){
+    const avg = a => a.reduce((s,x)=>s+x,0)/a.length;
+    proj = Math.round(avg(lkV.map(k=>k.p))*16 + avg(gkV.map(k=>k.p))*24 + avg(abV.map(a=>a.v4))*5);
+  }
+  return {items, lkE, lkW, gkE, blockI, blockII, total, abi, complete, proj, missing: missLK+missGK+missAbi};
+}
+
+function note(p){ for(const [g,n] of NOTEN){ if(p>=g) return n; } return null; }
+const ICON = {ok:"✓", err:"✗", open:"○", warn:"!"};
+function liste(items){
+  return items.map(o=>`<li class="${o.st}"><span class="ic">${ICON[o.st]}</span><span><span class="t">${o.t}</span>${o.d?`<span class="d">${esc(o.d)}</span>`:""}</span></li>`).join("");
+}
+function zaehle(items){ const z = {ok:0,open:0,err:0}; items.forEach(o=>{ if(z[o.st]!==undefined) z[o.st]++; }); return z; }
+function gruppenStatus(z){ return z.err ? "err" : (z.open ? "open" : "ok"); }
+
+/* ---------- Alles aktualisieren ---------- */
+function update(){
+  const {lk, gk} = kurse();
+  weitereFeedback(lk, gk);
+  const PW = analysePW(), EIN = analyseEin(lk, gk), B = analyseBest(lk, gk);
+
+  // Ergebnis in den Abiturkästchen
+  document.querySelectorAll("[data-res]").forEach(el=>{ const a = B.abi[Number(el.dataset.res)]; el.textContent = a ? `= ${a.v4} P.` : ""; });
+
+  // kurzes Urteil unter der Prüfungswahl
+  const zPW = zaehle(PW.items);
+  $("pwVerdict").innerHTML = zPW.err ? `<div class="verdict err">Diese Prüfungswahl ist so nicht zulässig – siehe Status „Prüfungswahl“.</div>`
+    : (zPW.open ? `<div class="verdict open">Noch nicht vollständig – ${zPW.open} ${plural(zPW.open,"Bedingung","Bedingungen")} offen.</div>` : `<div class="verdict ok">Diese Prüfungswahl ist nach OAVO zulässig.</div>`);
+
+  renderBreakdown(B);
+
+  // Note / Hochrechnung
+  const gruppen = [
+    {id:"pw",  name:"Prüfungswahl", sub:"§§ 13, 24", items:PW.items},
+    {id:"ein", name:"Einbringung", sub:"§ 26 Abs. 2, 4, 6", items:EIN},
+    {id:"best",name:"Bestehen", sub:"§ 26 Abs. 2, 13, 14", items:B.items}
+  ];
+  gruppen.forEach(g=>{ g.z = zaehle(g.items); g.st = gruppenStatus(g.z); });
+  const fehler = gruppen.some(g=>g.st==="err");
+  let big, lab, state;
+  if(B.complete){
+    big = B.total>=300 ? note(B.total) : "–"; lab = "Abiturdurchschnittsnote";
+    state = (!fehler && !gruppen.some(g=>g.st==="open")) ? `<span class="good">Bestanden – allgemeine Hochschulreife</span>` : `<span class="bad">Bedingungen nicht erfüllt</span>`;
+  } else {
+    big = (B.proj!==null && B.proj>=300) ? "≈ " + note(B.proj) : "–";
+    lab = B.proj!==null ? "Hochrechnung bei gleichem Schnitt" : "Hochrechnung ab je einer Eingabe in LK, GK und Abitur";
+    state = fehler ? `<span class="bad">${gruppen.filter(g=>g.st==="err").map(g=>g.name).join(", ")}: Bedingung verletzt</span>` : `<span class="mini">${B.missing} Punkteingaben offen</span>`;
+  }
+  const chips = gruppen.map(g=>`<button class="chip ${g.st}" data-goto="${g.id}">${ICON[g.st]} ${g.name}${g.z.err?` · ${g.z.err}`:(g.z.open?` · ${g.z.open} offen`:"")}</button>`).join("");
+  $("panelHead").innerHTML = `<div class="phtop">
+      <div class="nt"><div class="big">${big}</div><div class="mini">${lab}</div></div>
+      <div class="pp"><div class="ptsl"><b>${B.total}</b> / 900 Punkte</div><div class="mini">Block I ${B.blockI}/600 · Block II ${B.blockII}/300</div><div class="state">${state}</div></div>
+      <button class="tgl" id="tgl" aria-expanded="${$("panel").classList.contains("open")}">${$("panel").classList.contains("open")?"Schließen ▼":"Details ▲"}</button>
+    </div><div class="chips">${chips}</div>`;
+  $("panelBody").innerHTML = gruppen.map(g=>`<section class="grp" id="grp-${g.id}"><h3><span>${g.name} <span class="mini">${g.sub}</span></span><span class="cnt"><span class="c-ok">✓${g.z.ok}</span> <span class="c-open">○${g.z.open}</span> <span class="c-err">✗${g.z.err}</span></span></h3><ul class="checks">${liste(g.items)}</ul></section>`).join("")
+    + (PW.hints.length ? `<details class="grp hints"><summary>Hinweise (${PW.hints.length})</summary><ul class="checks">${liste(PW.hints.map(t=>({st:"warn",t})))}</ul></details>` : "")
+    + `<p class="mini legend2">✓ erfüllt · ○ noch offen (erreichbar) · ✗ verletzt bzw. nicht mehr erreichbar</p>`;
+
+  // große Karte im Ergebnisbereich
+  $("total").innerHTML = `<div class="mini">${lab}</div><div class="big">${big}</div>
+    <div class="pts">${B.total} / 900 Punkte</div>
+    <div class="mini" style="margin-top:10px;text-align:left">Block I: ${B.blockI} / 600</div><div class="bar"><span style="width:${B.blockI/6}%"></span></div>
+    <div class="mini" style="margin-top:6px;text-align:left">Block II: ${B.blockII} / 300</div><div class="bar"><span style="width:${B.blockII/3}%;background:var(--abi)"></span></div>
+    <div class="state">${state}</div>`;
+}
+
+function renderBreakdown(B){
+  const qrow = i => [0,1,2,3].map(q=>{ const p=pt(S.q[i][q]); return (p===null||Number.isNaN(p))?"–":p; });
+  let b = `<b>Aufschlüsselung</b><div class="tscroll"><table style="margin-top:8px"><thead><tr><th>Bereich</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>einfach</th><th>gewertet</th></tr></thead><tbody>`;
+  for(const i of [0,1]){
+    const r = qrow(i); const e = r.reduce((s,x)=>s+(x==="–"?0:x),0);
+    b += `<tr><td><span class="pill lk">LK</span> ${esc(S.pf[i]||PF_LABEL[i])}</td>${r.map(x=>`<td>${x}</td>`).join("")}<td>${e}</td><td>${2*e} <span class="mini">(2x)</span></td></tr>`;
+  }
+  b += `<tr class="sum"><td colspan="5">Leistungskursbereich (8 Kurse)</td><td>${B.lkE}</td><td>${B.lkW} / 240</td></tr>`;
+  let pfE = 0;
+  for(const i of [2,3,4]){
+    if(i===4 && isBll()) continue;
+    const r = qrow(i); const e = r.reduce((s,x)=>s+(x==="–"?0:x),0); pfE += e;
+    b += `<tr><td><span class="pill gk">GK</span> ${esc(S.pf[i]||PF_LABEL[i])}</td>${r.map(x=>`<td>${x}</td>`).join("")}<td>${e}</td><td>${e} <span class="mini">(1x)</span></td></tr>`;
+  }
+  const wE = B.gkE - pfE;
+  b += `<tr><td colspan="5"><span class="pill gk">GK</span> weitere Kurse (${nWeitere()})</td><td>${wE}</td><td>${wE} <span class="mini">(1x)</span></td></tr>`;
+  b += `<tr class="sum"><td colspan="5">Grundkursbereich (24 Kurse)</td><td>${B.gkE}</td><td>${B.gkE} / 360</td></tr>`;
+  b += `<tr class="sum"><td colspan="6">Block I (Qualifikationsphase)</td><td>${B.blockI} / 600</td></tr></tbody></table></div>`;
+  b += `<div class="tscroll"><table style="margin-top:16px"><thead><tr><th>Abiturprüfung</th><th style="text-align:left">Art</th><th>einfach</th><th>vierfach</th></tr></thead><tbody>`;
+  for(let i=0;i<5;i++){
+    const a = B.abi[i];
+    b += `<tr><td><span class="pill abi">${i+1}.</span> ${esc(S.pf[i]||PF_LABEL[i])}</td><td style="text-align:left">${a?esc(a.txt):"–"}</td><td>${a?fmt(a.einfach):"–"}</td><td>${a?a.v4:"–"}</td></tr>`;
+  }
+  b += `<tr class="sum"><td colspan="3">Block II (Abiturbereich)</td><td>${B.blockII} / 300</td></tr></tbody></table></div>`;
+  b += `<p class="mini">Bei schriftlicher und mündlicher Prüfung im selben Fach: (2 · schriftlich + mündlich) · 4/3, abgerundet (Anlage 10a). „Einfach“ zeigt dann den gewichteten Mittelwert.</p>`;
+  $("breakdown").innerHTML = b;
+}
+
+/* ---------- Sofort-Rückmeldung in den Kästchen „Weitere Kurse“ ---------- */
+function weitereFeedback(lk, gk){
+  const lkF = [S.pf[0],S.pf[1]].filter(Boolean);
+  const pfGk = [2,3,4].filter(i=>!(i===4 && isBll())).map(i=>S.pf[i]).filter(Boolean);
+  const alle = [...lk,...gk];
+  const gueltig = k => k.p!==null && !Number.isNaN(k.p);
+  const unter5 = alle.filter(k=>gueltig(k) && k.p<5).length;
+  const lkUnter5 = lk.filter(k=>gueltig(k) && k.p<5).length;
+  let sport = 0;
+  for(let j=0;j<nWeitere();j++){
+    const w = S.w[j], box = document.querySelector(`[data-wbox="${j}"]`);
+    if(!box) continue;
+    const msg = box.querySelector(".msg"), selF = box.querySelector("[data-wf]"), selH = box.querySelector("[data-wh]"), inp = box.querySelector("[data-wp]");
+    const p = pt(w.p);
+    let err = null, warn = null, bad = {f:false,h:false,p:false};
+    if(w.f){
+      if(lkF.includes(w.f)){ err = `${w.f} ist dein Leistungsfach und kann nicht zusätzlich als Grundkurs eingebracht werden.`; bad.f = true; }
+      else if(pfGk.includes(w.f)){ err = `${w.f} ist schon Prüfungsfach – alle vier Kurse stehen oben in der Zeile des Prüfungsfachs.`; bad.f = true; }
+      else if(w.f==="Sport" && ++sport>3){ err = "Höchstens 3 Sportkurse dürfen eingebracht werden (§ 17 Abs. 1)."; bad.f = true; }
+      else if(w.h){
+        const andere = gk.filter(k=>k.src==="weiterer Kurs" && k.wi!==j && k.f===w.f && String(k.h)===String(w.h));
+        if(andere.length){ err = `${w.f} Q${w.h} ist doppelt eingetragen – jeder Kurs zählt nur einmal.`; bad.f = bad.h = true; }
+      }
+    }
+    if(!err){
+      if(Number.isNaN(p)){ err = "Bitte nur ganze Punkte von 0 bis 15 eingeben."; bad.p = true; }
+      else if(p===0){ err = "Kurse mit 0 Punkten dürfen nicht eingebracht werden (§ 26 Abs. 2)."; bad.p = true; }
+      else if(p!==null && p<5){
+        if(unter5>6){ err = `Schon ${unter5} Kurse unter 5 Punkten – erlaubt sind höchstens 6.`; bad.p = true; }
+        else warn = `Unter 5 Punkten: ${unter5} von höchstens 6 Kursen genutzt.`;
+      }
+      else if(w.f && !w.h) warn = "Bitte noch das Halbjahr wählen.";
+      else if(!w.f && (w.h || p!==null)) warn = "Bitte noch das Fach wählen.";
+    }
+    box.classList.toggle("err", !!err);
+    box.classList.toggle("warn", !err && !!warn);
+    box.classList.toggle("ok", !err && !warn && !!w.f && !!w.h && p!==null);
+    selF.classList.toggle("err", bad.f); selH.classList.toggle("err", bad.h);
+    if(bad.p) inp.classList.add("bad");
+    const text = err || warn || "";
+    if(text){
+      if(msg.textContent!==text || msg.hidden){ msg.hidden = false; msg.textContent = text; msg.style.animation="none"; void msg.offsetWidth; msg.style.animation=""; }
+      msg.className = "msg " + (err?"err":"warn");
+    } else { msg.hidden = true; msg.textContent = ""; }
+  }
+}
+
+
+/* ---------- Ereignisse ---------- */
+function renderAll(){ renderPW(); renderSchema(); update(); }
+document.addEventListener("change", e=>{
+  const t = e.target, d = t.dataset;
+  if(d.pf!==undefined){ S.pf[Number(d.pf)] = t.value; save(); renderSchema(); update(); return; }
+  if(d.art5!==undefined){ S.art5 = t.value; save(); renderSchema(); update(); return; }
+  if(d.mon!==undefined){ S.abi[Number(d.mon)].mOn = t.checked; save(); renderSchema(); update(); return; }
+  if(d.wf!==undefined){ S.w[Number(d.wf)].f = t.value; save(); update(); return; }
+  if(d.wh!==undefined){ S.w[Number(d.wh)].h = t.value; save(); update(); return; }
+});
+document.addEventListener("input", e=>{
+  const t = e.target, d = t.dataset;
+  if(d.q!==undefined){ const [r,h]=d.q.split(",").map(Number); S.q[r][h]=t.value; }
+  else if(d.abi!==undefined){ const [i,k]=d.abi.split(","); S.abi[Number(i)][k]=t.value; }
+  else if(d.wp!==undefined){ S.w[Number(d.wp)].p=t.value; }
+  else return;
+  t.className = cls(t.value);
+  save(); update();
+});
+// Reset mit eingebauter Bestätigung (kein confirm() im Rahmen)
+const rb = $("reset"); let armed = false, timer = null;
+rb.addEventListener("click", ()=>{
+  if(!armed){ armed=true; rb.textContent="Wirklich alles löschen? Nochmal klicken"; rb.style.background="#fdeef0"; timer=setTimeout(()=>{armed=false; rb.textContent="Alle Eingaben löschen"; rb.style.background="";},4000); return; }
+  clearTimeout(timer); armed=false; rb.textContent="Alle Eingaben löschen"; rb.style.background="";
+  S = leer(); try{ localStorage.removeItem(KEY); }catch(e){} renderAll();
+});
+
+/* Statusbereich: Aufklappen (mobil) und Sprung zu einer Gruppe */
+document.addEventListener("click", e=>{
+  const t = e.target.closest("#tgl, [data-goto]");
+  if(!t) return;
+  const panel = $("panel");
+  if(t.id==="tgl"){ panel.classList.toggle("open"); update(); return; }
+  panel.classList.add("open"); update();
+  const g = document.getElementById("grp-"+t.dataset.goto);
+  if(g){ $("panelBody").scrollTop = g.offsetTop - $("panelBody").offsetTop - 4; g.classList.remove("flash"); void g.offsetWidth; g.classList.add("flash"); }
+});
+renderAll();
+})();
+</script>
+</body>
+</html>
