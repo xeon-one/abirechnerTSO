@@ -222,7 +222,7 @@ tr.sum td{font-weight:800;border-top:2px solid #a9c3c9}
   <p class="sub mini">Kreuze für jede Fremdsprache an, ob du sie seit der Unterstufe (Sekundarstufe I) hattest und ob du sie in der Oberstufe belegst. Daraus ergibt sich, welche Sprache als <b>fortgeführt</b> gilt – das entscheidet über Leistungskurs, Prüfungsfach und Einbringung.</p>
   <div class="card">
     <div class="fs" id="fs"></div>
-    <p class="sub mini" style="margin:12px 0 0">Fortgeführt = seit der Unterstufe und in der Oberstufe belegt. Neu begonnen = erst in der Einführungsphase angefangen; eine solche Sprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4) und nicht die 4 Pflichtkurse der fortgeführten Fremdsprache abdecken (§ 26 Abs. 4).</p>
+    <p class="sub mini" style="margin:12px 0 0">Fortgeführt = seit der Unterstufe und in der Oberstufe belegt. Neu begonnen = erst in der Einführungsphase angefangen; eine solche Sprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4) und nicht die 4 Pflichtkurse der fortgeführten Fremdsprache abdecken (§ 26 Abs. 4). Hattest du in der Unterstufe nur <b>eine</b> Fremdsprache, erfüllst du die Fremdsprachenverpflichtung über die neu begonnene Sprache – dann müssen aus ihr <b>Q3 und Q4</b> eingebracht werden (§ 14 Abs. 3, § 26 Abs. 4 Nr. 3).</p>
   </div>
 
   <h2>2 · Prüfungsfächer wählen</h2>
@@ -357,8 +357,14 @@ function analyseFS(){
       "Es muss mind. eine fortgeführte Fremdsprache belegt sein, denn daraus müssen 4 Kurse eingebracht werden (§ 26 Abs. 4).",
       fort.length ? `fortgeführt: ${fort.join(", ")}`
         : (belegt.length ? "Keine deiner Oberstufensprachen kommt aus der Unterstufe – damit sind die 4 Pflichtkurse nicht erfüllbar." : "noch keine Angabe"));
+  const mittel = fsListe(f=>fsSt(f).u);
+  if(mittel.length<2)
+    add(belegt.length>=2 ? "ok" : (belegt.length ? "err" : "open"),
+        "Ohne durchgehende zweite Fremdsprache aus der Mittelstufe muss in der Oberstufe durchgehend eine zweite Fremdsprache belegt werden (§ 14 Abs. 3).",
+        belegt.length>=2 ? `zwei Sprachen belegt: ${belegt.join(", ")}`
+          : (belegt.length ? "Bisher ist nur eine Oberstufensprache angegeben." : "noch keine Angabe"));
   if(neu.length)
-    add("warn", "Eine in der Einführungsphase neu begonnene Fremdsprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4).",
+    add("warn", "Eine in der Einführungsphase neu begonnene Fremdsprache kann nur 4. oder 5. Prüfungsfach sein (§ 24 Abs. 4) und setzt insgesamt mind. 12 Jahreswochenstunden voraus (§ 14 Abs. 5).",
         `neu begonnen: ${neu.join(", ")}`);
   return items;
 }
@@ -583,6 +589,25 @@ function analyseEin(lk, gk){
   else
     req("Es müssen mind. 2 Kurse in einer weiteren Fremdsprache oder in einer weiteren Naturwissenschaft bzw. Informatik eingebracht werden.",
         Math.max(fsB_best?c(fsB_best):0, c(nwB_best)), 2);
+
+  // Neu begonnene Fremdsprache: § 14 Abs. 3 i.V.m. § 26 Abs. 4 Nr. 3 bzw. § 26 Abs. 5 Nr. 3
+  const neuSprachen = ofType("fs").filter(fsNeu);
+  const zweiAusMittelstufe = FS_FAECHER.filter(f=>fsSt(f).u).length >= 2;
+  const hatKurs = (f,h) => [...lk,...gk].some(k=>k.f===f && Number(k.h)===h);
+  const pflichtNeu = (!zweiAusMittelstufe && neuSprachen.length) ? best(neuSprachen) : null;
+  neuSprachen.forEach(f=>{
+    const q3 = hatKurs(f,3), q4 = hatKurs(f,4);
+    if(f===pflichtNeu){
+      const fehlt = (q3?0:1) + (q4?0:1);
+      const t = `Aus ${f} müssen die Kurse Q3 und Q4 eingebracht werden, weil die Fremdsprachenverpflichtung über diese neu begonnene Sprache erfüllt wird (§ 14 Abs. 3, § 26 Abs. 4 Nr. 3).`;
+      if(!fehlt) add("ok", t, "Q3 und Q4 eingetragen");
+      else add(fehlt<=kap ? "open" : "err", t,
+        `${fehlt===2 ? "Q3 und Q4 fehlen" : (q3 ? "Q4 fehlt" : "Q3 fehlt")}${fehlt>kap ? ` – aber nur noch ${kap} freie Felder` : ""}`);
+    } else if([...lk,...gk].some(k=>k.f===f)){
+      const t = `Aus ${f} darf nur eingebracht werden, wenn mind. einer der beiden letzten Kurse (Q3 oder Q4) dabei ist (§ 26 Abs. 5 Nr. 3).`;
+      add(q3||q4 ? "ok" : "err", t, q3||q4 ? "" : "Weder Q3 noch Q4 ist eingetragen.");
+    }
+  });
 
   const fsUnbelegt = [...new Set([...lk,...gk].filter(k=>k.f && istFS(k.f) && !fsSt(k.f).o).map(k=>k.f))];
   add(fsUnbelegt.length?"err":"ok", "Es dürfen nur Kurse in Fremdsprachen eingebracht werden, die in der Oberstufe belegt sind.",
