@@ -226,6 +226,7 @@ tr.sum td{font-weight:800;border-top:2px solid #a9c3c9}
   </div>
 
   <h2>2 · Prüfungsfächer wählen</h2>
+  <p class="sub mini">Angeboten wird hier nur, was an der TSO auch Prüfungsfach sein kann. Philosophie steht deshalb nicht zur Wahl – das Fach kann belegt und unter „Weitere Kurse“ eingebracht werden, eine Abiturprüfung darin ist aber nicht möglich.</p>
   <div class="card">
     <div class="pw" id="pw"></div>
     <div id="pwVerdict"></div>
@@ -266,6 +267,10 @@ const FAECHER = {
 };
 const ALLE = Object.keys(FAECHER);
 const FS_FAECHER = ALLE.filter(f=>FAECHER[f].t==="fs");   // Englisch, Französisch, Spanisch, Polnisch
+// TSO-Besonderheit: Philosophie wird nur als Kursfach angeboten und kann eingebracht,
+// aber nicht als Prüfungsfach gewählt werden.
+const KEIN_PF = ["Philosophie"];
+const PF_FAECHER = ALLE.filter(f=>!KEIN_PF.includes(f));
 const LK_FAECHER = ["Deutsch","Englisch","Mathematik","Biologie","Chemie","Physik","Politik und Wirtschaft","Geschichte","Kunst"];
 const FELD = {1:"sprachlich-literarisch-künstlerisch",2:"gesellschaftswissenschaftlich",3:"mathematisch-naturwissenschaftlich-technisch"};
 const PF_LABEL = ["1. Prüfungsfach","2. Prüfungsfach","3. Prüfungsfach","4. Prüfungsfach","5. Prüfungsfach"];
@@ -292,6 +297,8 @@ let S = leer();
 try{ const raw = localStorage.getItem(KEY); if(raw){ const o = JSON.parse(raw); if(o && o.pf && o.q && o.w && o.abi) S = Object.assign(leer(), o); } }catch(e){}
 // Fremdsprachen-Angaben vervollständigen (auch bei älteren gespeicherten Ständen)
 (function(){ const alt = S.fs || {}; S.fs = leerFS(); FS_FAECHER.forEach(f=>{ if(alt[f]){ S.fs[f].u = !!alt[f].u; S.fs[f].o = !!alt[f].o; } }); })();
+// Nicht mehr wählbare Prüfungsfächer aus älteren Ständen entfernen
+S.pf = S.pf.map(f => KEIN_PF.includes(f) ? "" : f);
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
 /* ---------- Hilfen ---------- */
@@ -373,7 +380,7 @@ function analyseFS(){
 function renderPW(){
   let h = "";
   for(let i=0;i<5;i++){
-    const list = i<2 ? LK_FAECHER : ALLE;
+    const list = i<2 ? LK_FAECHER : PF_FAECHER;
     h += `<div><label>${PF_LABEL[i]} <span class="tag ${i<2?"lk":"gk"}">${i<2?"LK":"GK"}</span></label>
       <select data-pf="${i}">${opts(list,S.pf[i],"– Fach wählen –")}</select>`;
     if(i===4) h += `<select data-art5 style="margin-top:6px">${Object.keys(ART5).map(k=>`<option value="${k}"${k===S.art5?" selected":""}>${ART5[k]}</option>`).join("")}</select>`;
@@ -470,6 +477,10 @@ function analysePW(){
     dup.push(`${pf[i]} (${i+1}. und ${k+1}. PF)`);
   }
   add(dup.length?"err":"ok", "Jedes Fach darf nur einmal Prüfungsfach sein.", dup.length ? `doppelt: ${dup.join(", ")}` : "");
+
+  const pfVerboten = [...new Set(pf.filter(f=>f && KEIN_PF.includes(f)))];
+  add(pfVerboten.length?"err":"ok", `${KEIN_PF.join(", ")} wird an der TSO nur als Kursfach angeboten und kann nicht Prüfungsfach sein.`,
+      pfVerboten.length ? `${pfVerboten.join(", ")} ist als Prüfungsfach gewählt – die Kurse können aber eingebracht werden.` : "");
 
   const lks = [pf[0],pf[1]].filter(Boolean);
   const lkTaugt = f => istFS(f) ? fsFort(f) : ["m","nw"].includes(typ(f));
